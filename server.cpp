@@ -107,7 +107,7 @@ void clientHandler(int connection){
             std::cout << "Server write error on message back ";
             exit(0);
         }
-        if (clientMsg == "exit"){
+        if (clientMsg == "EXIT"){
             break;
         }
     }
