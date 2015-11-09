@@ -60,51 +60,56 @@ int main(int argc, char **argv){
 
 
 void clientHandler(int connection){
-    char greeting[] = "Send a word.";
-    short len = (short)strlen(greeting);
-    short netLen = htons(strlen(greeting));
-    if(writeNumBytes(connection, (char*)&netLen, sizeof(netLen)) < 0){
-        std::cout << "Server write error on length of greeting ";
-        exit(0);
-    }
-    if(writeNumBytes(connection, greeting, len) < 0){
-        std::cout << "Server write error on greeting ";
-        exit(0);
-    }
-    short lenClientMsg = 0;
-    if(readNumBytes(connection, (char*) &lenClientMsg, sizeof(lenClientMsg)) < 0){
-        std::cout << "Server read error on lenClientMsg ";
-        exit(0);
-    }
+    while(true) {
+        char greeting[] = "Send a word.";
+        short len = (short) strlen(greeting);
+        short netLen = htons(strlen(greeting));
+        if (writeNumBytes(connection, (char *) &netLen, sizeof(netLen)) < 0) {
+            std::cout << "Server write error on length of greeting ";
+            exit(0);
+        }
+        if (writeNumBytes(connection, greeting, len) < 0) {
+            std::cout << "Server write error on greeting ";
+            exit(0);
+        }
+        short lenClientMsg = 0;
+        if (readNumBytes(connection, (char *) &lenClientMsg, sizeof(lenClientMsg)) < 0) {
+            std::cout << "Server read error on lenClientMsg ";
+            exit(0);
+        }
 
 
-    lenClientMsg = ntohs(lenClientMsg);
+        lenClientMsg = ntohs(lenClientMsg);
 
 
-    //std::cout << "length client message: " << lenClientMsg << std::endl;
+        //std::cout << "length client message: " << lenClientMsg << std::endl;
 
 
-    char clientMsg[lenClientMsg + 1];
-    if(readNumBytes(connection, clientMsg, lenClientMsg) < 0){
-        std::cout << "Server read error on clientMsg ";
-        exit(0);
-    }
+        char clientMsg[lenClientMsg + 1];
+        if (readNumBytes(connection, clientMsg, lenClientMsg) < 0) {
+            std::cout << "Server read error on clientMsg ";
+            exit(0);
+        }
 
-    //std::cout << "client message: " << clientMsg << std::endl;
+        //std::cout << "client message: " << clientMsg << std::endl;
 
-    clientMsg[lenClientMsg] = '\n';
-    for (int i = 0; i < strlen(clientMsg); ++i){
-        clientMsg[i] = (char)toupper(clientMsg[i]);
-    }
-    short netLenClientMsg = htons(lenClientMsg);
-    if(writeNumBytes(connection, (char*)&netLenClientMsg, sizeof(netLenClientMsg)) < 0){
-        std::cout << "Server write error on length of message back ";
-        exit(0);
-    }
+        clientMsg[lenClientMsg] = '\n';
+        for (int i = 0; i < strlen(clientMsg); ++i) {
+            clientMsg[i] = (char) toupper(clientMsg[i]);
+        }
+        short netLenClientMsg = htons(lenClientMsg);
+        if (writeNumBytes(connection, (char *) &netLenClientMsg, sizeof(netLenClientMsg)) < 0) {
+            std::cout << "Server write error on length of message back ";
+            exit(0);
+        }
 
-    if(writeNumBytes(connection, clientMsg, lenClientMsg) < 0){
-        std::cout << "Server write error on message back ";
-        exit(0);
+        if (writeNumBytes(connection, clientMsg, lenClientMsg) < 0) {
+            std::cout << "Server write error on message back ";
+            exit(0);
+        }
+        if (clientMsg == "exit"){
+            break;
+        }
     }
     close(connection);
 }

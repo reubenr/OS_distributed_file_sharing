@@ -54,9 +54,10 @@ int main(int argc, char **argv){
     return 0;
 }
 
-void serverComm(int serverSocketFD){
+void serverComm(int serverSocketFD) {
+    for(;;){
     short len = 0;
-    if(readNumBytes(serverSocketFD, (char*) &len, sizeof(len)) < 0){
+    if (readNumBytes(serverSocketFD, (char *) &len, sizeof(len)) < 0) {
         std::cout << "Client read error on len of greeting" << std::endl;
         exit(0);
     }
@@ -66,7 +67,7 @@ void serverComm(int serverSocketFD){
 
 
     char serverGreeting[len + 1];
-    if(readNumBytes(serverSocketFD, serverGreeting, len) < 0){
+    if (readNumBytes(serverSocketFD, serverGreeting, len) < 0) {
         std::cout << "Client read error greeting" << std::endl;
         exit(0);
     }
@@ -79,23 +80,23 @@ void serverComm(int serverSocketFD){
     std::cin.clear();
     std::cin.ignore();
 
-    short inputLen = (short)inputWord.length();
+    short inputLen = (short) inputWord.length();
     char inputWordCStr[inputLen + 1];
-    for(int i = 0; i < inputLen; ++i){
+    for (int i = 0; i < inputLen; ++i) {
         inputWordCStr[i] = inputWord[i];
     }
     inputWordCStr[inputLen] = '\n';
     short netInputLen = htons(inputLen);
-    if(writeNumBytes(serverSocketFD, (char*) &netInputLen, sizeof(netInputLen)) < 0){
+    if (writeNumBytes(serverSocketFD, (char *) &netInputLen, sizeof(netInputLen)) < 0) {
         std::cout << "Client write error word " << std::endl;
         exit(0);
     }
-    if(writeNumBytes(serverSocketFD, inputWordCStr, inputLen) < 0){
+    if (writeNumBytes(serverSocketFD, inputWordCStr, inputLen) < 0) {
         std::cout << "Client write error word " << std::endl;
         exit(0);
     }
     short lenReturnMessage = 0;
-    if(readNumBytes(serverSocketFD, (char*) &lenReturnMessage, sizeof(lenReturnMessage)) < 0){
+    if (readNumBytes(serverSocketFD, (char *) &lenReturnMessage, sizeof(lenReturnMessage)) < 0) {
         std::cout << "Client read error on len of return" << std::endl;
         exit(0);
     }
@@ -107,7 +108,7 @@ void serverComm(int serverSocketFD){
 
 
     char serverReturn[lenReturnMessage + 1];
-    if(readNumBytes(serverSocketFD, serverReturn, lenReturnMessage) < 0){
+    if (readNumBytes(serverSocketFD, serverReturn, lenReturnMessage) < 0) {
         std::cout << "Client read error return" << std::endl;
         exit(0);
     }
@@ -115,7 +116,10 @@ void serverComm(int serverSocketFD){
 
     serverReturn[lenReturnMessage] = '\n';
     std::cout << serverReturn << std::endl;
-
+    if(inputWord == "exit"){
+        break;
+    }
+}
     close(serverSocketFD);
 }
 
