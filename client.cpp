@@ -1,18 +1,12 @@
 #include<thread>
+#include<iostream>
 #include<sys/types.h>
 #include<sys/socket.h>
 #include<arpa/inet.h>
 #include<string.h>
-#include<netinet/in.h>
-#include<sys/time.h>
-#include<iostream>
-#include<errno.h>
-#include<string>
 #include<unistd.h>
-#include<stdlib.h>
-#include<time.h>
 
-#define MAXLINE 1024
+
 #define SERVER_PORT_NUM 8100
 #define CLIENT_PORT_NUM 8104
 #define SERVER_IP "127.0.0.1"
@@ -56,70 +50,69 @@ int main(int argc, char **argv){
 
 void serverComm(int serverSocketFD) {
     for(;;){
-    short len = 0;
-    if (readNumBytes(serverSocketFD, (char *) &len, sizeof(len)) < 0) {
-        std::cout << "Client read error on len of greeting" << std::endl;
-        exit(0);
+        short len = 0;
+        if (readNumBytes(serverSocketFD, (char *) &len, sizeof(len)) < 0) {
+            std::cout << "Client read error on len of greeting" << std::endl;
+            exit(0);
+        }
+
+        len = ntohs(len);
+
+        char serverGreeting[len + 1];
+
+        if (readNumBytes(serverSocketFD, serverGreeting, len) < 0) {
+            std::cout << "Client read error greeting" << std::endl;
+            exit(0);
+        }
+
+        std::cout << serverGreeting << std::endl;
+
+        serverGreeting[len] = '\0';
+        std::string inputWord = "";
+        std::cin >> inputWord;
+        std::cin.clear();
+        std::cin.ignore();
+
+        short inputLen = (short) inputWord.length();
+        char inputWordCStr[inputLen + 1];
+        for (int i = 0; i < inputLen; ++i) {
+            inputWordCStr[i] = inputWord[i];
+        }
+
+        inputWordCStr[inputLen] = '\0';
+
+        short netInputLen = htons(inputLen);
+
+        if (writeNumBytes(serverSocketFD, (char *) &netInputLen, sizeof(netInputLen)) < 0) {
+            std::cout << "Client write error word " << std::endl;
+            exit(0);
+        }
+
+        if (writeNumBytes(serverSocketFD, inputWordCStr, inputLen) < 0) {
+            std::cout << "Client write error word " << std::endl;
+            exit(0);
+        }
+
+        short lenReturnMessage = 0;
+        if (readNumBytes(serverSocketFD, (char *) &lenReturnMessage, sizeof(lenReturnMessage)) < 0) {
+            std::cout << "Client read error on len of return" << std::endl;
+            exit(0);
+        }
+
+        lenReturnMessage = ntohs(lenReturnMessage);
+
+        char serverReturn[lenReturnMessage + 1];
+        if (readNumBytes(serverSocketFD, serverReturn, lenReturnMessage) < 0) {
+            std::cout << "Client read error return" << std::endl;
+            exit(0);
+        }
+
+        serverReturn[lenReturnMessage] = '\0';
+        std::cout << serverReturn << std::endl;
+        if(inputWord == "exit"){
+            break;
+        }
     }
-    len = ntohs(len);
-
-    //std::cout << "length server greeting: " << len << std::endl;
-
-
-    char serverGreeting[len + 1];
-    if (readNumBytes(serverSocketFD, serverGreeting, len) < 0) {
-        std::cout << "Client read error greeting" << std::endl;
-        exit(0);
-    }
-
-    std::cout << serverGreeting << std::endl;
-
-    serverGreeting[len] = '\n';
-    std::string inputWord = "";
-    std::cin >> inputWord;
-    std::cin.clear();
-    std::cin.ignore();
-
-    short inputLen = (short) inputWord.length();
-    char inputWordCStr[inputLen + 1];
-    for (int i = 0; i < inputLen; ++i) {
-        inputWordCStr[i] = inputWord[i];
-    }
-    inputWordCStr[inputLen] = '\n';
-    short netInputLen = htons(inputLen);
-    if (writeNumBytes(serverSocketFD, (char *) &netInputLen, sizeof(netInputLen)) < 0) {
-        std::cout << "Client write error word " << std::endl;
-        exit(0);
-    }
-    if (writeNumBytes(serverSocketFD, inputWordCStr, inputLen) < 0) {
-        std::cout << "Client write error word " << std::endl;
-        exit(0);
-    }
-    short lenReturnMessage = 0;
-    if (readNumBytes(serverSocketFD, (char *) &lenReturnMessage, sizeof(lenReturnMessage)) < 0) {
-        std::cout << "Client read error on len of return" << std::endl;
-        exit(0);
-    }
-
-
-    lenReturnMessage = ntohs(lenReturnMessage);
-
-    //std::cout << "length return message: " << lenReturnMessage << std::endl;
-
-
-    char serverReturn[lenReturnMessage + 1];
-    if (readNumBytes(serverSocketFD, serverReturn, lenReturnMessage) < 0) {
-        std::cout << "Client read error return" << std::endl;
-        exit(0);
-    }
-
-
-    serverReturn[lenReturnMessage] = '\n';
-    std::cout << serverReturn << std::endl;
-    if(inputWord == "exit"){
-        break;
-    }
-}
     close(serverSocketFD);
 }
 

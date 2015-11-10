@@ -1,19 +1,14 @@
 #include<thread>
+#include<iostream>
 #include<sys/types.h>
 #include<sys/socket.h>
 #include<arpa/inet.h>
-#include<netinet/in.h>
-#include<sys/time.h>
-#include<iostream>
-#include<errno.h>
 #include<string.h>
 #include<unistd.h>
-#include<stdlib.h>
-#include<time.h>
+
 
 #define PORT_NUMBER 8100
 #define LISTENQ 10
-#define MAXLINE 1024
 
 void clientHandler(int);
 int readNumBytes(int, char*, int);
@@ -78,26 +73,23 @@ void clientHandler(int connection){
             exit(0);
         }
 
-
         lenClientMsg = ntohs(lenClientMsg);
 
-
-        //std::cout << "length client message: " << lenClientMsg << std::endl;
-
-
         char clientMsg[lenClientMsg + 1];
+
         if (readNumBytes(connection, clientMsg, lenClientMsg) < 0) {
             std::cout << "Server read error on clientMsg ";
             exit(0);
         }
 
-        //std::cout << "client message: " << clientMsg << std::endl;
+        clientMsg[lenClientMsg] = '\0';
 
-        clientMsg[lenClientMsg] = '\n';
         for (int i = 0; i < strlen(clientMsg); ++i) {
             clientMsg[i] = (char) toupper(clientMsg[i]);
         }
+
         short netLenClientMsg = htons(lenClientMsg);
+
         if (writeNumBytes(connection, (char *) &netLenClientMsg, sizeof(netLenClientMsg)) < 0) {
             std::cout << "Server write error on length of message back ";
             exit(0);
@@ -107,7 +99,8 @@ void clientHandler(int connection){
             std::cout << "Server write error on message back ";
             exit(0);
         }
-        if (clientMsg == "EXIT"){
+
+        if (strcmp(clientMsg, "EXIT") == 0){ //close connection with client thread
             break;
         }
     }
